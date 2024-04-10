@@ -1,40 +1,94 @@
 import React from "react";
 import {useState} from "react"
 import "./App.css";
-
+import TodoForm from "./components/TodoForm"
+import TodoList  from "./components/TodoList";
+import {ToastContainer, toast } from "react-toastify"
+import 'react-toastify/dist/ReactToastify.css';
+import NewComp from "./components/NewComp";
+ 
 const App = () => {
 
   const [todo, setTodo] = useState("");
-  const [todos, setTodos] = useState([]);
+  const [todos, setTodos] = useState([]);   
   const [editId, setEditId] = useState(0)
 
-  const submitForm = (e) =>{
-    e.preventDefault()
+  // const submitForm = (e) =>{
+  //   e.preventDefault()
 
-    if(todo.length !== ""){
-      if(editId){
-        const editedTodo = todos.find((t) => t.id === editId)
+  //   if(todo.length !== ""){  
+  //     if(editId){
+  //       const editedTodo = todos.find((t) => t.id === editId)
 
-        const updatedTodods = todos.map((t) => 
-        t.id === editedTodo.id ? (t = {id: t.id, todo}) : ({id: t.id, todo: t.todo})
-      );
-      setTodos(updatedTodods);
-      // setEditId(0)
-      // setTodo("")
-      // editedTodo.todo = todo 
-        setEditId(0)
-        setTodo("")
-        return;
-      }
-      setTodos([{id: `${todo}-${Date.now()}`, todo}, ...todos])
-    }    
-    setTodo("")
-    console.log(todos)
+  //       const updatedTodods = todos.map((t) => 
+  //       t.id === editedTodo.id ? (t = {id: t.id, todo}) : ({id: t.id, todo: t.todo})
+  //     );
+  //     setTodos(updatedTodods);
+  //       setEditId(0)
+  //       setTodo("")
+  //       return;
+  //     }
+  //     setTodos([{id: `${todo}-${Date.now()}`, todo, completed: false}, ...todos])
+  //   }     
+  //   setTodo("")
+  // } 
+
+
+  const showToast = (message, type) =>{
+
+    if(type === "success"){
+      return toast.success(message, {
+        position: "top-right",
+        autoClose: 1000,
+        hideProgressBar: false,
+        theme: "light",
+      });
+    }
+
+    toast.error(message, {
+      position: "top-right",
+      autoClose: 1000,
+      hideProgressBar: false,
+      theme: "light",
+    });
   }
+
+  const submitForm = (e) => {
+    e.preventDefault();
+  
+    if (todo.trim() !== "") {  
+      if (editId) {
+        const updatedTodos = todos.map((t) => {
+          if (t.id === editId) {
+            return { ...t, todo };
+          }
+          
+          return t;
+        });
+  
+        setTodos(updatedTodos);
+        setEditId(0);
+        setTodo("");
+        showToast("Todo Updated", "success")
+      } else {
+        setTodos([{ id: `${todo}-${Date.now()}`, todo, completed: false }, ...todos]);
+        setTodo("");
+      }
+    }else{
+      showToast("Type Something !")
+      console.log("write something")
+    }
+
+  };
+  
+
+
+
 
   const handleDelete = (id) => {
     const deleteTodo = todos.filter((t) => t.id !== id)
     setTodos([...deleteTodo])
+    showToast("Todo Deleted", "success")
   }
 
   const handleEdit = (id) => {
@@ -43,32 +97,31 @@ const App = () => {
     setEditId(id)
   }
 
+  const handleCheckMark = (id) =>{
+    const updatedTodos = todos.map(todo => {
+      if(todo.id === id){
+        return {...todo, completed: !todo.completed}
+      }
+      return todo
+    })
+  setTodos(updatedTodos)    
+  }
+
   return (
     <div className="app">
-      <div className="container">
-        <h1>Todo List</h1>
 
-        <form className="todoForm" onSubmit={submitForm}>
-        <input type="text" value={todo} onChange={(e) => setTodo(e.target.value)}/>
-        <button> {editId? "Update" : "Add"}</button>
-        </form>
+      <h1 className="text-center fw-bolder mt-4">TODO List</h1>
 
-        <ul className="list">
+      <ToastContainer/>
 
-        {
-          todos.map((t)=> (
-            <li className="single-todo">
-            <span className="todo-text" key={t.id}>{t.todo}</span>
-            <button onClick={() => handleEdit(t.id)}>Edit</button>
-            <button onClick={()=> handleDelete(t.id)}>Delete</button>
-          </li>
-          ))
-        }
+      <div className="container text-center">
 
-          
-          
-         
-        </ul>
+        <TodoForm submitForm={submitForm} todo={todo} setTodo={setTodo} editId={editId} />
+
+        <TodoList todos={todos} handleDelete={handleDelete} handleEdit={handleEdit} handleCheckMark={handleCheckMark} />
+
+        {/* <NewComp /> */}
+        
       </div>
     </div>
   );
